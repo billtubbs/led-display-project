@@ -3,8 +3,9 @@ Drivers and sample code for an irregular 1593-LED light
 display array.
 
 The 1593-LED irregular light array contains two Teensy 3.1
-microcontrollers mounted on OctoWS2811 adaptor boards for 
-communication 16 led strips (8 on each Teensy).
+microcontrollers mounted on OctoWS2811 adaptor boards 
+communicating with 16 led strips (8 strips connected to
+each Teensy).
 
 Each strip contains around 98 to 100 DC5V WS2811 LEDs 
 arranged in an irregular pattern on a 5 x 5 foot display.
