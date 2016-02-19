@@ -7,7 +7,7 @@ microcontrollers mounted on OctoWS2811 adaptor boards
 communicating with 16 led strips (8 strips connected to
 each Teensy).
 
-Each strip contains around 98 to 100 DC5V WS2811 LEDs 
+Each strip contains around 98 to 100 DC5V WS2811 RGB LEDs 
 arranged in an irregular pattern on a 5 x 5 foot display.
 
 The Teensy driver code uses the OctoWS2811 LED Library 
