@@ -1,6 +1,6 @@
-# display1593
-Driver code and other documentation for an irregular 1593-LED 
-light display screen.
+# Led Display Project
+
+Driver code and other documentation for an irregular 1593-LED light display screen.
 
 **Construction of irregular LED display**
 
