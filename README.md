@@ -25,10 +25,18 @@ Each strip contains around 98 to 100 5-volt [WS2811 RGB LEDs](https://www.aliexp
 The Teensy driver code uses the OctoWS2811 LED Library provided by Paul Stoffregen:
 * https://www.pjrc.com/teensy/td_libs_OctoWS2811.html
 
-The Teensy microcontrollers are connected to a [Raspberry Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/).
+The Teensy microcontrollers are connected to a [Raspberry Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/) via USB (serial).
 
-## Completed Project
+## Completed project
 
 For a photo of the completed display and more information on the Raspberry Pi code and some of the display projects, see this separate repository:
 * https://github.com/billtubbs/display1593/
+
+
+## Acknowledgements
+
+Thanks to:
+* [Crashbang Labs Regina](https://crashbanglabs.net) for providing the means and motivation to make this project happen.
+* [Paul Stoffregen](https://github.com/PaulStoffregen) for Teensy development and helpful advice.
+
 
