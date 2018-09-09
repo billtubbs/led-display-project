@@ -6,7 +6,9 @@ Driver code and other documentation for an irregular 1593-LED light display scre
 
 <IMG SRC="images/160505photo_ledproject03_cropped.jpg" WIDTH=400>
 
-The 1593 LEDs are arranged in an irregular pattern on a 4x4 foot display (1.2 x 1.2 metres).  The LEDs are mounted on pieces of hardboard cut with a lazer cutter from pattern files produced by a random spacing algorithm.
+The 1593 LEDs are arranged in an irregular pattern on a 4x4 foot display (1.2 x 1.2 metres).  The LEDs are mounted on pieces of hardboard cut with a lazer cutter from pattern files produced by a random spacing algorithm written in Python:
+
+* [cellspacing.py](https://github.com/billtubbs/led-display-project/blob/master/cellspacing.py)
 
 ## Design documents
 * [dwg.150406_final.pdf](https://github.com/billtubbs/led-display-project/blob/master/dwg.150406_final.pdf) - Arrangement drawing of the LED mounting plates
