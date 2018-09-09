@@ -11,7 +11,7 @@ The 1593-LED irregular light array contains two [Teensy 3.1 microcontrollers](ht
 Each strip contains around 98 to 100 5V [WS2811 RGB LEDs](https://www.aliexpress.com/item/DC5V-WS2811-pixel-node-50node-a-string-non-waterproof-SIZE-13mm-13mm/1624010105.html) arranged in an irregular pattern on a 4x4 foot display (1.2 x 1.2 metres).
 
 ## Design documents
-* dwg.150406_final.pdf(https://github.com/billtubbs/led-display-project/blob/master/dwg.150406_final.pdf) - Arrangement drawing of the LED mounting plates
+* [dwg.150406_final.pdf](https://github.com/billtubbs/led-display-project/blob/master/dwg.150406_final.pdf) - Arrangement drawing of the LED mounting plates
 
 The Teensy driver code uses the OctoWS2811 LED Library by Paul Stoffregen:
 * https://www.pjrc.com/teensy/td_libs_OctoWS2811.html
