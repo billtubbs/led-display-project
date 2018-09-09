@@ -1,4 +1,4 @@
-# Led Display Project
+# Irregular Led Display Project
 
 Driver code and other documentation for an irregular 1593-LED light display screen.
 
