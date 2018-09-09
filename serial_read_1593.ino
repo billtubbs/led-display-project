@@ -30,7 +30,10 @@
 // REMEMBER TO CHANGE THE FOLLOWING LINE WHEN COMPILING AND 
 // UPLOADING THIS CODE TO THE TEENSY.
 // Set which Teensy controller the code is for (1 or 2)
-#define TEENSY1
+// Usually 
+// - TEENSY1 is on usb port 1274541
+// - TEENSY2 is on usb port 686201
+#define TEENSY2
 
 #include <OctoWS2811.h>
 #include <avr/pgmspace.h>
@@ -45,6 +48,14 @@
 
 // Pin number for on-board LED
 #define BOARDLED 13
+
+// Pin number for analog input from photo resistor
+#ifdef TEENSY1
+#define PHOTORES 3
+#endif
+
+// Baud rate for serial communications
+# define BAUD 19200
 
 // These constants reflect my LED strip setup for
 // Teensy Number 1:
@@ -204,7 +215,7 @@ void setup() {
   // Setup code (only runs once at startup)
   
   // Initialize serial communication and set baud rate
-  Serial.begin(38400);
+  Serial.begin(BAUD);
   
   // Setup pins
   pinMode(BOARDLED, OUTPUT);
@@ -215,23 +226,43 @@ void setup() {
 }
 
 
-unsigned short incomingByte = 0;
 unsigned short ledNum;
 char colR, colG, colB;
 unsigned int col;
+unsigned short i, n;
+const unsigned short *p;
+char busy = 0, command = 0;
 
+#ifdef TEENSY1
+unsigned int bness = analogRead(PHOTORES);
+#endif
 
 void loop() {
   
-  short unsigned i, n;
-  const unsigned short *p;
-  
   // Check if data received on serial port
   // and if so read it in
-  if (Serial.available()) {
-    incomingByte = Serial.read();  // will not be -1
-  
-    switch(incomingByte)  // see what was sent to the board
+  if (Serial.available()) { 
+    
+    // Check if a function is still in progress
+    // if not, start a new one
+    if(busy)
+      command = busy;
+    else
+      command = Serial.read();   // will not be -1 
+
+    // Command List
+    // ------------
+    //
+    // 'ID' - Send identification message in response
+    // 'S' - Set the colour of one LED
+    // 'T' - Set the colour of one LED - using teensy led number
+    // 'N' - Update a batch of n LED colours
+    // 'A' - Update all LED colours
+    // 'G' - Get the colour of an LED and return it
+    // 'CLS' - Clear screen (to black)
+    // 'B' - Send the brightness reading according to photoresistor
+ 
+    switch(command)  // see what was sent to the board
     {
 
       // Update one LED value if the 
@@ -241,7 +272,7 @@ void loop() {
         colR = int(Serial.read());
         colG = int(Serial.read());
         colB = int(Serial.read());
-        leds.setPixel(lookupTable[ledNum], colR, colG, + colB);
+        leds.setPixel(ledNum, colR, colG, colB);
         break;
         
       // Update one LED value if the 
@@ -251,30 +282,46 @@ void loop() {
         colR = int(Serial.read());
         colG = int(Serial.read());
         colB = int(Serial.read());
-        leds.setPixel(ledNum, colR, colG, + colB);
+        leds.setPixel(lookupTable[ledNum], colR, colG, colB);
         break;
         
       // Update all LED values (on this Teensy)
       // if the character 'A' was sent
       case 'A':
-        for(i = 0, p = lookupTable; i<numLeds; i++, p++) {
+        if(busy) {
           colR = int(Serial.read());
           colG = int(Serial.read());
           colB = int(Serial.read());
           leds.setPixel(*p, colR, colG, colB);
+          i++, p++;
+          if(i == numLeds)
+            busy = 0;
+        }
+        else {
+          i = 0;
+          p = lookupTable;
+          busy = 'A';
         }
         break;
 
       // Update a batch of n LED values if the 
       // character 'N' was sent
       case 'N':
-        n = int((Serial.read() << 8) + Serial.read());
-        for(i = 0; i<n; i++) {
+        if(busy) {
           ledNum = int((Serial.read() << 8) + Serial.read());
           colR = int(Serial.read());
           colG = int(Serial.read());
           colB = int(Serial.read());
-          leds.setPixel(lookupTable[ledNum], colR, colG, colB);
+          leds.setPixel(ledNum, colR, colG, colB);
+          if(i < n)
+            i++;
+          else
+            busy = 0;
+        }
+        else {
+          n = int((Serial.read() << 8) + Serial.read());
+          i = 0;
+          busy = 'N';
         }
         break;
 
@@ -282,16 +329,19 @@ void loop() {
       // if the character 'G' was sent
       case 'G':
         ledNum = int((Serial.read() << 8) + Serial.read());
-        col = leds.getPixel(lookupTable[ledNum]);
+        col = leds.getPixel(ledNum);
         Serial.write((col >> 16) & 0xff);
         Serial.write((col >> 8) & 0xff);
         Serial.write(col & 0xff);
+        break;
 
       // Clear screen (to black) if the 
-      // character 'C' was sent
+      // character 'CLS' was sent
       case 'C':
-        for(i = 0; i<(numberOfStrips*maxLedsPerStrip); i++) {
-          leds.setPixel(i, 0);
+        if( (Serial.read() == 'L') && (Serial.read() == 'S')) 
+        {
+            for(i = 0; i<(numberOfStrips*maxLedsPerStrip); i++)
+              leds.setPixel(i, 0);
         }
         break;
     
@@ -307,12 +357,29 @@ void loop() {
 
           #ifdef TEENSY2
           Serial.write("Teensy2\n");
-          #endif         
+          #endif        
 
         }
         break;
-      
-    }
+
+      // Send the brightness reading according to photoresistor
+      // if the character 'B' was sent (only applies to Teensy1)
+      case 'B':
+        
+        #ifdef TEENSY1
+        bness = analogRead(PHOTORES);
+        Serial.write((bness >> 8) & 0xff);
+        Serial.write(bness & 0xff);
+        #endif
+        
+        #ifdef TEENSY2
+        Serial.write(0);
+        Serial.write(0);
+        #endif
+        
+        break;
+        
+   }
     
   }
   
@@ -331,7 +398,7 @@ void loop() {
     ledState = (ledState == LOW)? HIGH : LOW;
     
     // set the LED with the ledState of the variable:
-    digitalWrite(BOARDLED, ledState);
+    // digitalWrite(BOARDLED, ledState);
   }
   
 }
