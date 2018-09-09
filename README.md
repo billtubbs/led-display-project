@@ -27,6 +27,11 @@ The Teensy driver code uses the OctoWS2811 LED Library provided by Paul Stoffreg
 
 The Teensy microcontrollers are connected to a [Raspberry Pi Zero](https://www.raspberrypi.org/products/raspberry-pi-zero/) via USB (serial).
 
+## Driver code
+
+* [serial_read_1593.ino](https://github.com/billtubbs/led-display-project/blob/master/serial_read_1593.ino) - Arduino code for Teensies
+* [arraydata.h](https://github.com/billtubbs/led-display-project/blob/master/arraydata.h) - Arduino data file containing LED co-ordinates, nearest neighbours etc.
+
 ## Completed project
 
 For a photo of the completed display and more information on the Raspberry Pi code and some of the display projects, see this separate repository:
