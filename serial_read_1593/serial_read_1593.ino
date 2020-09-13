@@ -196,6 +196,8 @@ const unsigned short lookupTable[] = {
 
 #endif
 
+// Memory allocation is based on the size of 32-bit integers:
+// 6 * 32 = 192 = 8 strips * 3 colours * 8 bits = 192 bytes
 DMAMEM int displayMemory[maxLedsPerStrip*6];
 int drawingMemory[maxLedsPerStrip*6];
 
@@ -402,4 +404,3 @@ void loop() {
   }
   
 }
-
