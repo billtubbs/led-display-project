@@ -197,7 +197,7 @@ const unsigned short lookupTable[] = {
 #endif
 
 // Memory allocation is based on the size of 32-bit integers:
-// 6 * 32 = 192 = 8 strips * 3 colours * 8 bits = 192 bytes
+// 100*6*32 = 19200 = 8 strips * 100 * 3 colours * 8 bits = 192 bytes
 DMAMEM int displayMemory[maxLedsPerStrip*6];
 int drawingMemory[maxLedsPerStrip*6];
 
@@ -386,7 +386,7 @@ void loop() {
   }
   
   // check to see if it's time to begin a new
-  // refresh of the LEDs (and blink the LED)
+  // refresh of the LEDs (and blink the board LED)
   unsigned long currentMillis = millis();
   
   if(currentMillis - previousMillis > INTERVAL) {
