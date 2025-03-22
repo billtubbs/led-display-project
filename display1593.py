@@ -1,11 +1,33 @@
 import serial
 import time
 import numpy as np
-from typing import Optional, Union
+from serial import SerialException
+from serial_utils import open_serial_connections, establish_communication
 
-class LEDMatrixController:
+
+DEFAULT_BAUD_RATE = 921600
+THIS_DEVICE_ID = 51
+OTHER_DEVICE_IDS = [49, 50]
+NOT_CONNECTED = 'not connected'
+CONNECTED = 'connected'
+COMMUNICATING = 'communicating'
+DEVICE_STATUS = {
+    0: NOT_CONNECTED,
+    1: CONNECTED,
+    2: COMMUNICATING
+}
+
+# Serial ports of Teensy devices
+# Find these by running ls /dev/tty.* from command line
+SERIAL_PORTS = {
+    49: '/dev/cu.usbmodem12745401',
+    50: '/dev/cu.usbmodem6862001'
+}
+
+
+class Display1593:
     """
-    Controller for sending video data to an Arduino-controlled LED matrix.
+    Controller for sending data to/from an Arduino-controlled LED matrix.
 
     This class handles the communication protocol with an Arduino running
     the FastLED controller code to drive a 1493 RGB LED display.
@@ -13,74 +35,61 @@ class LEDMatrixController:
 
     def __init__(
         self,
-        port: str,
-        baud_rate: int = 921600,
-        matrix_size: tuple = (100,)
+        ports: list[str] = SERIAL_PORTS,
+        baud_rate: int = DEFAULT_BAUD_RATE,
     ):
         """
-        Initialize the LED matrix controller.
+        Initialize the LED display controller.
 
         Args:
             port: Serial port name (e.g., 'COM3' on Windows,
                 '/dev/ttyUSB0' on Linux)
-            baud_rate: Serial baud rate (should match Arduino
-                code)
-            matrix_size: Dimensions of the LED matrix (width,
-                height)
+            baud_rate: Serial baud rate (should match Arduino code)
         """
-        self.port = port
+        self.ports = ports
         self.baud_rate = baud_rate
-        self.matrix_size = matrix_size
-        self.num_pixels = matrix_size[0]
-        self.ser = None
-        self.connected = False
+        self.serial_conns = None
+        self.device_status = {device_id: NOT_CONNECTED for device_id in ports}
         self.header_marker = 0xAB  # Must match Arduino code
 
     def connect(self) -> bool:
-        """Connect to the Arduino controller."""
-        try:
-            self.ser = serial.Serial(
-                port=self.port,
-                baudrate=self.baud_rate,
-                timeout=2.0
+        """Connect to the Teensy controllers."""
+        self.serial_conns = open_serial_connections(
+            self.ports, baud_rate=self.baud_rate
+        )
+        for device_id, serial_conn in self.serial_conns.items():
+            self.device_status[device_id] = CONNECTED
+        failed_connections = (
+            set(self.serial_conns.keys()) - set(self.ports.keys())
+        )
+        if len(failed_connections) > 0:
+            raise SerialException(
+                f"Failed to connect to devices: {failed_connections}"
             )
-
-            # Wait for Arduino to reset and send ready signal
-            time.sleep(2.0)
-            #breakpoint()
-            #self.ser.reset_input_buffer()
-
-            # Wait for ready signal ('R')
-            start_time = time.time()
-            while time.time() - start_time < 10.0:
-                if self.ser.in_waiting > 0:
-                    ready_byte = self.ser.read(1)
-                    if ready_byte == b'R':
-                        self.connected = True
-                        print("Connected to Arduino LED controller")
-                        return True
-                time.sleep(0.1)
-
-            print("Timed out waiting for Arduino ready signal")
-            self.ser.close()
-            return False
-
-        except Exception as e:
-            print(f"Error connecting to Arduino: {e}")
-            return False
+        for device_id, serial_conn in self.serial_conns.items():
+            status, device_id_reported, msg = \
+                establish_communication(serial_conn)
+            if status > 0:
+                raise SerialException(f"device {device_id}: {msg}")
+            self.device_status[device_id] = COMMUNICATING
+            assert device_id_reported == device_id
+        # TODO: Temp fix while testing
+        self.ser = self.serial_conns[1]
 
     def disconnect(self):
-        """Disconnect from the Arduino controller."""
-        if self.ser and self.ser.is_open:
-            self.ser.close()
-        self.connected = False
+        """Disconnect from the Teensy controllers."""
+        for device_id, serial_conn in self.serial_conns.items():
+            if serial_conn.is_open:
+                serial_conn.close()
+                device_status[device_id] = NOT_CONNECTED
 
     def send_frame(self, frame: np.ndarray, wait_for_ack: bool = True) -> bool:
         """
         Send a single frame to the LED matrix.
 
         Args:
-            frame: Numpy array with shape (height, width, 3) containing RGB values (0-255)
+            frame: Numpy array with shape (length, 3) containing RGB
+                values (0-255)
             wait_for_ack: Whether to wait for acknowledgment from Arduino
 
         Returns:
