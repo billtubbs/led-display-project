@@ -78,7 +78,7 @@ def sendToArduino(sendStr):
   txLen = chr(len(sendStr))
   adjSendStr = encodeHighBytes(sendStr)
   adjSendStr = chr(startMarker) + txLen + adjSendStr + chr(endMarker)
-  ser.write(adjSendStr)
+  ser.write(adjSendStr.encode())
 
 
 #======================================
@@ -151,8 +151,8 @@ def decodeHighBytes(inStr):
      outStr = outStr + x
      n += 1
      
-  print "decINSTR  " + bytesToString(inStr)
-  print "decOUTSTR " + bytesToString(outStr)
+  print("decINSTR  " + bytesToString(inStr))
+  print("decOUTSTR " + bytesToString(outStr))
 
   return(outStr)
 
@@ -163,9 +163,9 @@ def displayData(data):
 
   n = len(data) - 3
 
-  print "NUM BYTES SENT->   " + str(ord(data[1]))
-  print "DATA RECVD BYTES-> " + bytesToString(data[2:-1])
-  print "DATA RECVD CHARS-> " + data[2: -1]
+  print("NUM BYTES SENT->   " + str(ord(data[1])))
+  print("DATA RECVD BYTES-> " + bytesToString(data[2:-1]))
+  print("DATA RECVD CHARS-> " + data[2: -1])
 
 
 #======================================
@@ -187,7 +187,7 @@ def bytesToString(data):
 def displayDebug(debugStr):
 
    n = len(debugStr) - 3
-   print "DEBUG MSG-> " + debugStr[2: -1]
+   print("DEBUG MSG-> " + debugStr[2: -1])
 
 
 #============================
@@ -198,22 +198,26 @@ def waitForArduino():
    # it also ensures that any bytes left over from a previous message are discarded
    
     global endMarker
-    
-    msg = ""
-    while msg.find("Arduino Ready") == -1:
+
+    while True:
 
       while ser.inWaiting() == 0:
-        x = 'z'
+        pass
 
       # then wait until an end marker is received from the Arduino to make sure it is ready to proceed
-      x = "z"
-      while ord(x) != endMarker: # gets the initial debugMessage
+      msg = []
+      while True: # gets the initial debugMessage
         x = ser.read()
-        msg = msg + x
+        msg.append(x)
+        if ord(x) == endMarker:
+          break
+      msg = b''.join(msg)
 
+      if msg.find(b"Arduino Ready") != -1:
+        break
 
       displayDebug(msg)
-      print
+      print()
       
 
 #======================================
@@ -226,17 +230,17 @@ import serial
 import time
 
 # NOTE the user must ensure that the next line refers to the correct comm port
-ser = serial.Serial("/dev/ttyS80", 57600)
+ser = serial.Serial("/dev/tty.usbmodem112977801", 57600)
 
 
 startMarker = 254
 endMarker = 255
 specialByte = 253
 
-
+print("Waiting for Arduino...")
 waitForArduino()
 
-print "Arduino is ready"
+print("Arduino is ready")
 
 testData = []
 testData.append("abcde")
@@ -250,19 +254,20 @@ n = 0
 waitingForReply = False
 
 while n < numLoops:
-  print "LOOP " + str(n)
+  print("LOOP " + str(n))
   teststr = testData[n]
+  breakpoint()
 
   if ser.inWaiting() == 0 and waitingForReply == False:
     sendToArduino(teststr)
-    print "=====sent from PC=========="
-    print "LOOP NUM " + str(n)
-    print "BYTES SENT -> " + bytesToString(teststr)
-    print "TEST STR " + teststr
-    print "==========================="
+    print("=====sent from PC==========")
+    print("LOOP NUM " + str(n))
+    print("BYTES SENT -> " + bytesToString(teststr))
+    print("TEST STR " + teststr)
+    print("===========================")
     waitingForReply = True
 
-  if ser.inWaiting > 0:
+  if ser.inWaiting() > 0:
     dataRecvd = recvFromArduino()
 
     if dataRecvd[0] == 0:
@@ -270,13 +275,13 @@ while n < numLoops:
 
     if dataRecvd[0] > 0:
       displayData(dataRecvd[1])
-      print "Reply Received"
+      print("Reply Received")
       n += 1
       waitingForReply = False
 
-    print
-    print "==========="
-    print
+    print()
+    print("===========")
+    print()
 
     time.sleep(0.3)
 
