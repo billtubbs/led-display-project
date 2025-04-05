@@ -22,7 +22,6 @@ The key functions are:
             message was received.
         The second element contains the message as a string.
 
-
 The overall process followed by the demo program is as follows
     open the serial connection to the Arduino - which causes the Arduino to 
         reset.
@@ -96,7 +95,7 @@ SPECIAL_BYTE = 253
 
 def sendToArduino(ser, sendStr):
     global START_MARKER, END_MARKER
-    txLen = chr(len(sendStr))
+    txLen = chr(len(sendStr))  # max length is 255 chars
     adjSendStr = encodeHighBytes(sendStr)
     adjSendStr = chr(START_MARKER) + txLen + adjSendStr + chr(END_MARKER)
     ser.write(adjSendStr)
@@ -107,7 +106,7 @@ def recvFromArduino(ser):
     global START_MARKER, END_MARKER
 
     ck = []
-    byteCount = -1  # to allow for the fact that the last increment will be one too many
+    byteCount = -1  # the last increment will be one too many
 
     # wait for the start character
     while True:
@@ -130,7 +129,7 @@ def recvFromArduino(ser):
     returnData = []
     returnData.append(ord(ck[1]))
     returnData.append(decodeHighBytes(ck))
-    # print "RETURNDATA " + str(returnData[0])
+    # print "RETURNDATA {:s}".format(returnData[0])
 
     return(returnData)
 
@@ -172,31 +171,27 @@ def decodeHighBytes(inStr):
          n += 1
     outStr = b''.join(outStr)
 
-    print "decINSTR  " + bytesToString(inStr)
-    print "decOUTSTR " + bytesToString(outStr)
+    print "decINSTR  {:s}".format(bytesToString(inStr))
+    print "decOUTSTR {:s}".format(bytesToString(outStr))
 
     return(outStr)
 
 
 def displayData(data):
 
-    n = len(data) - 3
-
-    print "NUM BYTES SENT->   " + str(ord(data[1]))
-    print "DATA RECVD BYTES-> " + bytesToString(data[2:-1])
-    print "DATA RECVD CHARS-> " + data[2: -1]
+    print "NUM BYTES SENT->   {:d}".format(ord(data[1]))
+    print "DATA RECVD BYTES-> {:s}".format(bytesToString(data[2:-1]))
+    print "DATA RECVD CHARS-> {:s}".format(data[2: -1])
 
 
 def bytesToString(data):
 
-    byteString = [str(ord(s)) for s in data]
-
-    return "-".join(byteString)
+    return "-".join(str(ord(s)) for s in data)
 
 
 def displayDebug(debugStr):
 
-    print "DEBUG MSG-> " + debugStr[2:-1]
+    print "DEBUG MSG-> {:s}".format(debugStr[2:-1])
 
 
 def waitForArduino(ser):
@@ -209,10 +204,10 @@ def waitForArduino(ser):
 
     while True:
 
-        while ser.inWaiting() == 0:
+        while ser.in_waiting == 0:
             pass
 
-        # then wait until an end marker is received from the Arduino to make sure it is ready to proceed
+        # wait until an end marker is received from the Arduino to make sure it is ready to proceed
         msg = []
         while True:  # gets the initial debugMessage
             x = ser.read()
@@ -255,15 +250,15 @@ def main():
     waitingForReply = False
 
     while n < numLoops:
+        print "LOOP {:d}".format(n)
 
-        if ser.in_waiting == 0 and waitingForReply == False:
-            print "LOOP " + str(n)
+        if ser.in_waiting == 0 and waitingForReply is False:
             teststr = testData[n]
             sendToArduino(ser, teststr)
             print "=====sent from PC=========="
-            print "LOOP NUM " + str(n)
-            print "BYTES SENT -> " + bytesToString(teststr)
-            print "TEST STR " + teststr
+            print "LOOP NUM {:d}".format(n)
+            print "BYTES SENT -> {:s}".format(bytesToString(teststr))
+            print "TEST STR {:s}".format(teststr)
             print "==========================="
             waitingForReply = True
 
@@ -280,9 +275,7 @@ def main():
                 n += 1
                 waitingForReply = False
 
-            print
-            print "==========="
-            print
+            print "\n===========\n"
 
             time.sleep(0.3)
 
